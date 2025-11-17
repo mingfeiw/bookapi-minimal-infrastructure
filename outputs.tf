@@ -1,17 +1,15 @@
-data "azurerm_client_config" "current" {}
-
-output "azuread_app_id" {
-  value = azuread_application.gh_oidc_app.application_id
+output "uami_client_id" {
+  value = azurerm_user_assigned_identity.bookapi_uami.client_id
 }
 
-output "sp_object_id" {
-  value = azuread_service_principal.gh_oidc_sp.object_id
+output "acr_login_server" {
+  value = azurerm_container_registry.acr.login_server
 }
 
-output "tenant_id" {
-  value = data.azurerm_client_config.current.tenant_id
+output "aks_name" {
+  value = azurerm_kubernetes_cluster.aks.name
 }
 
-output "subscription_id" {
-  value = data.azurerm_client_config.current.subscription_id
+output "resource_group" {
+  value = azurerm_resource_group.rg.name
 }

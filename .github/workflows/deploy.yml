@@ -1,4 +1,4 @@
-name: Build and Deploy to AKS
+name: Deploy to AKS
 
 on:
   push:
@@ -6,26 +6,43 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
+    env:
+      ACR_NAME: acrbookapi
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - name: Checkout infra repo
+        uses: actions/checkout@v3
 
-      - name: Azure Login with Service Principal
+      - name: Azure login
         uses: azure/login@v1
         with:
-          identity: true
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Build and push Docker image
+      - name: ACR login
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: build and push image from source repo
+        uses: actions/checkout@v3
+        with:
+          repository: mingfeiw/bookapi-minimal
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: src
+
+      - name: Build docker image
         run: |
-          docker build -t acrbookapi.azurecr.io/bookapi-minimal:latest .
-          echo ${{ secrets.ACR_PASSWORD }} | docker login acrbookapi.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
-          docker push acrbookapi.azurecr.io/bookapi-minimal:latest
+          cd src
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest .
 
-      - name: Set aks context
-        run: az aks get-credentials --resource-group rg-bookapi-minimal --name aks-bookapi-minimal --overwrite-existing
+      - name: Push docker image to ACR
+        run: |
+          docker push ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest
 
-      - name: Deploy to AKS
+      - name: get aks credentials
+        run: az aks get-credentials --resource-group rg-bookapi-minimal --name aks-bookapi-minimal
+
+      - name: Deploy manifests
         run: kubectl apply -f k8s/
