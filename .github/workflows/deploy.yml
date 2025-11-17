@@ -1,0 +1,31 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login with Service Principal
+        uses: azure/login@v1
+        with:
+          identity: true
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t acrbookapi.azurecr.io/bookapi-minimal:latest .
+          echo ${{ secrets.ACR_PASSWORD }} | docker login acrbookapi.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
+          docker push acrbookapi.azurecr.io/bookapi-minimal:latest
+
+      - name: Set aks context
+        run: az aks get-credentials --resource-group rg-bookapi-minimal --name aks-bookapi-minimal --overwrite-existing
+
+      - name: Deploy to AKS
+        run: kubectl apply -f k8s/
