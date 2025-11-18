@@ -5,6 +5,9 @@ on:
     branches:
       - feature/uami
 
+permissions:
+  contents: read
+  
 env:
   SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   GITHUB_REPO_OWNER: mingfeiw
@@ -45,6 +48,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ env.SUBSCRIPTION_ID }}
+          auth-type: IDENTITY
 
       - name: ACR login
         run: az acr login --name ${{ env.ACR_NAME }}
@@ -61,5 +65,11 @@ jobs:
       - name: get aks credentials
         run: az aks get-credentials --resource-group ${{ env.RG_NAME }} --name ${{ env.AKS_NAME }}
 
-      - name: Deploy manifests
+      - name: Deploy to AKS
         run: kubectl apply -f infra/k8s/
+
+      - name: Terraform Apply
+        working-directory: infra
+        env:
+          TF_VAR_github_token: ${{ secrets.GH_TOKEN }}
+        run: terraform apply -auto-approve
