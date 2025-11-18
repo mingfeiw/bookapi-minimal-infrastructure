@@ -33,11 +33,11 @@ jobs:
           ref: ${{ env.GITHUB_BRANCH }}
           token: ${{ secrets.GITHUB_TOKEN }}
           path: src
-
+      
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v2
+        uses: hadolint/hadolint-action@v3
         with:
-          dockerfile: src/Dockerfile
+          dockerfile: src/Dockerfiledeploy
 
       - name: Azure login
         uses: azure/login@v1
