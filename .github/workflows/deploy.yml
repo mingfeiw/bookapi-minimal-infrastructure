@@ -9,7 +9,7 @@ env:
   SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   GITHUB_REPO_OWNER: mingfeiw
   GITHUB_REPO_NAME: bookapi-minimal
-  GITHUB_BRANCH: main
+  GITHUB_BRANCH: master
   ACR_NAME: ${{ secrets.ACR_NAME }}
   AKS_NAME: ${{ secrets.AKS_NAME }}
   RG_NAME: ${{ secrets.RG_NAME }}
