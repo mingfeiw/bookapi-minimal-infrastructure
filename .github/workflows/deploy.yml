@@ -35,7 +35,7 @@ jobs:
           path: src
       
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3
+        uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: src/Dockerfiledeploy
 
