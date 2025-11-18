@@ -9,7 +9,6 @@ permissions:
   contents: read
   
 env:
-  SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   GITHUB_REPO_OWNER: mingfeiw
   GITHUB_REPO_NAME: bookapi-minimal
   GITHUB_BRANCH: master
@@ -46,8 +45,8 @@ jobs:
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          object-id: ${{ secrets.AZURE_OBJECT_ID }}
-          resource-id: ${{ secrets.AZURE_RESOURCE_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           auth-type: IDENTITY
 
       - name: ACR login
