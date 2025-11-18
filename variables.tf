@@ -14,3 +14,15 @@ variable "github_branch" {
   type    = string
   default = "main"
 }
+
+variable "acr_name" {
+  type = string
+}
+
+variable "aks_name" {
+  type = string
+}
+
+variable "rg_name" {
+  type = string
+}

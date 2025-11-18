@@ -17,3 +17,14 @@ spec:
         image: acrbookapi.azurecr.io/bookapi-minimal:latest
         ports:
         - containerPort: 80
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: bookapi-secret
+              key: DbPassword
+        - name: APIKEY
+          valueFrom:
+            secretKeyRef:
+              name: bookapi-secret
+              key: APIKEY
