@@ -1,9 +1,9 @@
 data "azuread_application" "tti_mingfei_poc" {
-  display_name = "tti-mingfei-poc"
+  client_id = "6d9b61c7-8c93-4d79-b1f4-9a9f533baff1"
 }
 
 data "azuread_service_principal" "tti_mingfei_poc" {
-  application_id = data.azuread_application.tti_mingfei_poc.client_id
+  client_id = data.azuread_application.tti_mingfei_poc.client_id
 }
 
 resource "azuread_application_federated_identity_credential" "github" {
