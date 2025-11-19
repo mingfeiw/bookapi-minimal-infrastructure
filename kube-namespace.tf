@@ -9,4 +9,5 @@ resource "kubernetes_namespace" "bookapi_ns" {
   metadata {
     name = "bookapi"
   }
+  depends_on = [azurerm_kubernetes_cluster.aks]
 }

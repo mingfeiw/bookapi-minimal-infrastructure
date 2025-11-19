@@ -6,7 +6,6 @@ on:
       - feature/uami
 
 permissions:
-  id-token: write
   contents: read
   
 env:
@@ -18,7 +17,7 @@ env:
   RG_NAME: ${{ secrets.RG_NAME }}
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -65,11 +64,6 @@ jobs:
       - name: get aks credentials
         run: az aks get-credentials --resource-group ${{ env.RG_NAME }} --name ${{ env.AKS_NAME }}
 
-      - name: Deploy to AKS
-        run: kubectl apply -f infra/k8s/
-
-      - name: Terraform Apply
-        working-directory: infra
-        env:
-          TF_VAR_github_token: ${{ secrets.GH_TOKEN }}
-        run: terraform apply -auto-approve
+      - name: Deploy helm chart to aks
+        run: |
+          helm upgrade --install bookapi ./infra/bookapi-chart --namespace bookapi --create-namespace

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bookapi-chart.fullname" . }}
+  labels:
+    app: {{ include "bookapi-chart.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "bookapi-chart.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "bookapi-chart.name" . }}
+    spec:
+      containers:
+        - name: {{ include "bookapi-chart.name" . }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+          livenessProbe:
+           {{to  Yaml .Values.livenessProbe | indent 12}}
+          readinessProbe:
+            {{to Yaml .Values.readinessProbe | indent 12}}

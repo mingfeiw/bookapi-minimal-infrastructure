@@ -1,6 +1,10 @@
 resource "azurerm_resource_group" "rg" {
   name     = "rg-bookapi-minimal"
   location = "uksouth"
+
+  tags = {
+    preserve = "true"
+  }
 }
 
 resource "azurerm_user_assigned_identity" "bookapi_uami" {
@@ -14,7 +18,7 @@ resource "azurerm_container_registry" "acr" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
   sku                 = "Basic"
-  admin_enabled       = true
+  admin_enabled       = false
 }
 
 resource "azurerm_kubernetes_cluster" "aks" {
