@@ -1,31 +1,77 @@
-name: Build and Deploy to AKS
+name: Deploy to AKS
 
 on:
   push:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  GITHUB_REPO_OWNER: mingfeiw
+  GITHUB_REPO_NAME: bookapi-minimal
+  GITHUB_BRANCH: master
+  ACR_NAME: acrbookapi
+  AKS_NAME: aks-bookapi-minimal
+  RG_NAME: rg-bookapi-minimal
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Azure Login with Service Principal
-        uses: azure/login@v1
+      - name: Checkout infra repo
+        uses: actions/checkout@v3
         with:
-          identity: true
+          repository: ${{ env.GITHUB_REPO_OWNER }}/bookapi-minimal-infrastructure
+          path: infra
 
-      - name: Build and push Docker image
+      - name: Checkout source repo
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ env.GITHUB_REPO_OWNER }}/${{ env.GITHUB_REPO_NAME }}
+          ref: ${{ env.GITHUB_BRANCH }}
+          path: src
+
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: src/Dockerfile
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: infra
+        run: terraform apply -auto-approve
+
+      - name: ACR login
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build docker image
         run: |
-          docker build -t acrbookapi.azurecr.io/bookapi-minimal:latest .
-          echo ${{ secrets.ACR_PASSWORD }} | docker login acrbookapi.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
-          docker push acrbookapi.azurecr.io/bookapi-minimal:latest
+          cd src
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest .
 
-      - name: Set aks context
-        run: az aks get-credentials --resource-group rg-bookapi-minimal --name aks-bookapi-minimal --overwrite-existing
+      - name: Push docker image to ACR
+        run: |
+          docker push ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest
+
+      - name: Get AKS credentials
+        run: az aks get-credentials --resource-group ${{ env.RG_NAME }} --name ${{ env.AKS_NAME }}
 
       - name: Deploy to AKS
-        run: kubectl apply -f k8s/
+        run: kubectl apply -f infra/k8s/
