@@ -60,6 +60,12 @@ helm upgrade bookapi bookapi-chart --namespace bookapi
 
 ---
 
+## Identity & Access
+- OIDC & federated creds for GitHub Actions: `aad_oidc.tf`, `role_assign.tf`
+- Service principal: `aad_oidc.tf`, `role_assign.tf`
+
+---
+
 ## Observability
 - Logs/metrics: Log Analytics & App Insights (`data.tf`)
 - Key Vault diagnostics (`keyvault.tf`)
