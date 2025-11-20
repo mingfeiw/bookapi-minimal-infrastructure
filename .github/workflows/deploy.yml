@@ -57,9 +57,9 @@ jobs:
       - name: Terraform Import Other Resources
         working-directory: infra
         run: |
-          terraform import azurerm_subnet.aks_subnet "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/aks-subnet"
-          terraform import azurerm_subnet.appgw_subnet "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/appgw-subnet"
-              
+          terraform import azurerm_application_gateway.appgw /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/applicationGateways/appgw-bookapi
+          terraform import azurerm_kubernetes_cluster.aks /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-bookapi-minimal/providers/Microsoft.ContainerService/managedClusters/aks-bookapi-minimal
+
       - name: Terraform Apply
         working-directory: infra
         run: terraform apply -auto-approve
