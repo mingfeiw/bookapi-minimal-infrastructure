@@ -66,6 +66,20 @@ jobs:
           cd src
           docker build -t ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest .
 
+      - name: Get Qualys token
+        run: |
+          token=$(curl -s -k -X POST "${{secrets.QUALYS_GATEWAY_SERVER}}/auth" -H "Content-Type: application/x-www-form-urlencoded" -d "username=${{secrets.QUALYS_USERNAME}}&password=${{secrets.QUALYS_PASSWORD}}&token=true&permissions=true")
+          echo "TOKEN=$token" >> $GITHUB_ENV
+
+      - name: Download Qualys CLI scanner
+        run: |
+          chmod +x ${{ github.workspace }}/.github/workflows/supportfiles/download_qscanner.sh
+          ${{ github.workspace }}/.github/workflows/supportfiles/download_qscanner.sh
+
+      - name: Run Qualys Image Scan
+        run: |
+          ./linux-amd64/qscanner image ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest --gateway-url=${{secrets.QUALYS_GATEWAY_SERVER}} --mode get-report --access-token=${{ env.TOKEN }} --report-format json,table --output-dir ./.github/workflows/report
+
       - name: Push docker image to ACR
         run: |
           docker push ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest

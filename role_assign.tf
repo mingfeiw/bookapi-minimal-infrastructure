@@ -16,3 +16,6 @@ resource "azurerm_role_assignment" "aks_network_contributor" {
   role_definition_name = "Network Contributor"
   principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
 }
+
+data "azurerm_subscription" "primary" {
+}
