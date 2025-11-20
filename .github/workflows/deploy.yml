@@ -75,3 +75,8 @@ jobs:
 
       - name: Deploy to AKS
         run: helm upgrade --install bookapi infra/bookapi-chart --namespace bookapi --create-namespace
+
+      - name: Describe first pod for troubleshooting
+        run: |
+          POD_NAME=$(kubectl get pods -n bookapi -o jsonpath="{.items[0].metadata.name}")
+          kubectl describe pod $POD_NAME -n bookapi
