@@ -73,8 +73,8 @@ jobs:
 
       - name: Download Qualys CLI scanner
         run: |
-          chmod +x ${{ github.workspace }}/.github/workflows/download_qscanner.sh
-          ${{ github.workspace }}/.github/workflows/download_qscanner.sh
+          chmod +x ${{ github.workspace }}/.github/download_qscanner.sh
+          ${{ github.workspace }}/.github/download_qscanner.sh
 
       - name: Run Qualys Image Scan
         run: |
