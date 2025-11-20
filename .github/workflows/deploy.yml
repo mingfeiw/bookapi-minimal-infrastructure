@@ -74,4 +74,10 @@ jobs:
         run: az aks get-credentials --resource-group ${{ env.RG_NAME }} --name ${{ env.AKS_NAME }}
 
       - name: Deploy to AKS
-        run: kubectl apply -f infra/k8s/
+        run: helm upgrade --install bookapi ./bookapi-chart --namespace bookapi --create-namespace
+
+      - name: Verify AKS deployment
+        run: kubectl get all -n bookapi
+
+      - name: Check Ingress status
+        run: kubectl get ingress -n bookapi

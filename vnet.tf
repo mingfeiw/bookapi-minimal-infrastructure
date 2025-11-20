@@ -30,10 +30,3 @@ resource "azurerm_public_ip" "appgw_pip" {
   allocation_method   = "Static"
   sku                 = "Standard"
 }
-
-# Grant AKS permission to manage network resources
-resource "azurerm_role_assignment" "aks_network_contributor" {
-  scope                = azurerm_virtual_network.vnet.id
-  role_definition_name = "Network Contributor"
-  principal_id         = azurerm_kubernetes_cluster.aks.identity[0].principal_id
-}
