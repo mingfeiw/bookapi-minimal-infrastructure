@@ -54,10 +54,6 @@ jobs:
         working-directory: infra
         run: terraform init
         
-      - name: Terraform Import Resource Group
-        working-directory: infra
-        run: terraform import azurerm_resource_group.rg /subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}
-
       - name: Terraform Import Other Resources
         working-directory: infra
         run: |
