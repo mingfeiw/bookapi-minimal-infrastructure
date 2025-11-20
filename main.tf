@@ -1,9 +1,6 @@
 resource "azurerm_resource_group" "rg" {
   name     = "rg-bookapi-minimal"
   location = "uksouth"
-  tags = {
-    preserve = "true"
-  }
 }
 
 resource "azurerm_kubernetes_cluster" "aks" {
@@ -13,9 +10,15 @@ resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix          = "bookapi"
 
   default_node_pool {
-    name       = "default"
-    node_count = 1
-    vm_size    = "Standard_B2s"
+    name           = "default"
+    vnet_subnet_id = azurerm_subnet.aks_subnet.id
+    node_count     = 1
+  }
+
+  network_profile {
+    network_plugin = "azure"
+    service_cidr   = "10.1.0.0/16"
+    dns_service_ip = "10.1.0.10"
   }
 
   identity {

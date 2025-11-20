@@ -17,3 +17,8 @@ provider "azurerm" {
 }
 
 provider "azuread" {}
+
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+  config_context = "aks-bookapi-minimal"
+}
