@@ -7,7 +7,7 @@ resource "azurerm_key_vault" "bookapi_kv" {
 
   access_policy {
     tenant_id          = data.azurerm_client_config.current.tenant_id
-    object_id          = azurerm_kubernetes_cluster.aks-bookapi-minimal.identity[0].principal_id
+    object_id          = azurerm_kubernetes_cluster.aks.identity[0].principal_id
     secret_permissions = ["get", "list"]
   }
 }
