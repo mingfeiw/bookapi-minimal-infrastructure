@@ -57,7 +57,6 @@ jobs:
       - name: Terraform Import Other Resources
         working-directory: infra
         run: |
-          terraform import azurerm_role_assignment.gh_oidc_app_acr_push "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }}/providers/Microsoft.Authorization/roleAssignments/6d9b61c7-8c93-4d79-b1f4-9a9f533baff1"
           terraform import azurerm_subnet.aks_subnet "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/aks-subnet"
           terraform import azurerm_subnet.appgw_subnet "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/appgw-subnet"
               
