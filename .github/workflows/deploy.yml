@@ -57,12 +57,7 @@ jobs:
       - name: Terraform Import Other Resources
         working-directory: infra
         run: |
-          terraform import azurerm_application_insights.bookapi_appinsights "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Insights/components/bookapi-appinsights"
-          terraform import azurerm_private_dns_zone_virtual_network_link.vnet_link "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/privateDnsZones/internal.local/virtualNetworkLinks/vnet-dns-link"
-          terraform import azurerm_management_lock.bookapi_kv_delete_lock "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.KeyVault/vaults/kv-bookapiminimal/providers/Microsoft.Authorization/locks/kv-bookapiminimal-delete-lock"
-          terraform import azurerm_monitor_diagnostic_setting.bookapi_kv_diag "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.KeyVault/vaults/kv-bookapiminimal|bookapi-kv-diagnostics"
-          terraform import azurerm_network_security_rule.allow_http "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/networkSecurityGroups/your-nsg-name/securityRules/Allow-HTTP-80"
-          terraform import azurerm_role_assignment.gh_oidc_app_acr_push "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Authorization/roleAssignments/<role-assignment-id>"
+          terraform import azurerm_role_assignment.gh_oidc_app_acr_push "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.ContainerRegistry/registries/${{ env.ACR_NAME }}/providers/Microsoft.Authorization/roleAssignments/abcd1234-5678-90ef-ghij-klmnopqrstuv"
           terraform import azurerm_subnet.aks_subnet "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/aks-subnet"
           terraform import azurerm_subnet.appgw_subnet "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/${{ env.RG_NAME }}/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/appgw-subnet"
               
