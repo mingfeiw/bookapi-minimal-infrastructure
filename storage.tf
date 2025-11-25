@@ -15,3 +15,9 @@ resource "azurerm_storage_account" "bookapi_sa" {
     }
   }
 }
+
+resource "azurerm_storage_container" "tfstate" {
+  name                  = "bookapi-container"
+  storage_account_name  = azurerm_storage_account.bookapi_sa.name
+  container_access_type = "private"
+}
