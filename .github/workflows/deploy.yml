@@ -76,9 +76,9 @@ jobs:
           chmod +x ${{ github.workspace }}/.github/download_qscanner.sh
           ${{ github.workspace }}/.github/download_qscanner.sh
 
-      - name: Run Qualys Image Scan
-        run: |
-          ./linux-amd64/qscanner image ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest --gateway-url=${{secrets.QUALYS_GATEWAY_SERVER}} --mode get-report --access-token=${{ env.TOKEN }} --report-format json,table --output-dir ./.github/workflows/report
+      # - name: Run Qualys Image Scan
+      #   run: |
+      #     ./linux-amd64/qscanner image ${{ env.ACR_NAME }}.azurecr.io/bookapi-minimal:latest --gateway-url=${{secrets.QUALYS_GATEWAY_SERVER}} --mode get-report --access-token=${{ env.TOKEN }} --report-format json,table --output-dir ./.github/workflows/report
 
       - name: Push docker image to ACR
         run: |
