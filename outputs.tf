@@ -20,3 +20,30 @@ output "vnet_id" {
 output "aks_subnet_id" {
   value = azurerm_subnet.aks_subnet.id
 }
+
+# SQL Server outputs
+output "sql_server_name" {
+  value       = azurerm_mssql_server.main.name
+  description = "SQL Server name"
+}
+
+output "sql_server_fqdn" {
+  value       = azurerm_mssql_server.main.fully_qualified_domain_name
+  description = "SQL Server fully qualified domain name"
+}
+
+output "sql_database_name" {
+  value       = azurerm_mssql_database.main.name
+  description = "SQL Database name"
+}
+
+output "sql_admin_username" {
+  value       = azurerm_mssql_server.main.administrator_login
+  description = "SQL Server admin username"
+}
+
+# Note: Password is stored in Key Vault secret 'sql-admin-password'
+output "sql_connection_string_template" {
+  value       = "Server=${azurerm_mssql_server.main.fully_qualified_domain_name};Database=${azurerm_mssql_database.main.name};User ID=${azurerm_mssql_server.main.administrator_login};Password=<from_key_vault>;Encrypt=True;TrustServerCertificate=False;"
+  description = "SQL Connection string template (password from Key Vault)"
+}

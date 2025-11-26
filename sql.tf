@@ -3,9 +3,26 @@ data "azurerm_key_vault" "kv" {
   resource_group_name = "rg-bookapi-minimal"
 }
 
-data "azurerm_key_vault_secret" "sql_admin_password" {
+# Generate a secure random password for SQL admin
+resource "random_password" "sql_admin_password" {
+  length      = 16
+  min_lower   = 2
+  min_upper   = 2
+  min_numeric = 2
+  min_special = 2
+  special     = true
+}
+
+# Store the SQL admin password in Key Vault
+resource "azurerm_key_vault_secret" "sql_admin_password" {
   name         = "sql-admin-password"
+  value        = random_password.sql_admin_password.result
   key_vault_id = data.azurerm_key_vault.kv.id
+
+  tags = {
+    Environment = "dev"
+    Project     = "bookapi"
+  }
 }
 
 resource "random_integer" "suffix" {
@@ -19,7 +36,7 @@ resource "azurerm_mssql_server" "main" {
   location                     = "uksouth"
   version                      = "12.0"
   administrator_login          = "sqladminuser"
-  administrator_login_password = data.azurerm_key_vault_secret.sql_admin_password.value
+  administrator_login_password = random_password.sql_admin_password.result
 
   # Security settings
   public_network_access_enabled = true
@@ -46,17 +63,9 @@ resource "azurerm_mssql_database" "main" {
   }
 }
 
-# Firewall rule to allow Azure services
-resource "azurerm_mssql_firewall_rule" "azure_services" {
-  name             = "AllowAzureServices"
-  server_id        = azurerm_mssql_server.main.id
-  start_ip_address = "0.0.0.0"
-  end_ip_address   = "0.0.0.0"
-}
-
-# Firewall rule for your development environment (optional - remove if not needed)
-resource "azurerm_mssql_firewall_rule" "dev_access" {
-  name             = "AllowDevelopmentAccess"
+# Simple firewall rule - allow all access for development and CI/CD
+resource "azurerm_mssql_firewall_rule" "allow_all" {
+  name             = "AllowAllAccess"
   server_id        = azurerm_mssql_server.main.id
   start_ip_address = "0.0.0.0"
   end_ip_address   = "255.255.255.255"
