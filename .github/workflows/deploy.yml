@@ -53,20 +53,6 @@ jobs:
       - name: Terraform Init
         working-directory: infra
         run: terraform init
-      
-     
-      - name: Terraform Apply
-        working-directory: infra
-        run: |
-          # Try to import existing Key Vault first
-          terraform import azurerm_key_vault.bookapi_kv "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-bookapi-minimal/providers/Microsoft.KeyVault/vaults/kv-bookapi" || true
-          
-          # Apply with retry for role assignment conflicts
-          if ! terraform apply -auto-approve; then
-            terraform state rm azurerm_role_assignment.aks_acr_pull || true
-            terraform state rm azurerm_role_assignment.aks_network_contributor || true
-            terraform apply -auto-approve
-          fi
 
       - name: ACR login
         run: az acr login --name ${{ env.ACR_NAME }}

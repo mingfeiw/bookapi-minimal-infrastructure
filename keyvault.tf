@@ -13,18 +13,33 @@ resource "azurerm_key_vault" "bookapi_kv" {
     bypass         = "AzureServices"
   }
 
-  # Access policy for Terraform/GitHub Actions service principal
-  access_policy {
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-    object_id          = data.azurerm_client_config.current.object_id
-    secret_permissions = ["Get", "List"]
-  }
-
-  # Access policy for AKS cluster
-  access_policy {
-    tenant_id          = data.azurerm_client_config.current.tenant_id
-    object_id          = azurerm_kubernetes_cluster.aks.identity[0].principal_id
-    secret_permissions = ["Get", "List"]
+  # Access policies with full permissions for all principals
+  dynamic "access_policy" {
+    for_each = [
+      {
+        comment   = "Terraform/GitHub Actions service principal"
+        object_id = data.azurerm_client_config.current.object_id
+      },
+      {
+        comment   = "AKS cluster"
+        object_id = azurerm_kubernetes_cluster.aks.identity[0].principal_id
+      },
+      {
+        comment   = "tti_mingfei_poc service principal"
+        object_id = data.azuread_service_principal.tti_mingfei_poc.id
+      },
+      {
+        comment   = "mingfei.wang@kpmg.co.uk user"
+        object_id = data.azuread_user.mingfei_wang.object_id
+      }
+    ]
+    content {
+      tenant_id               = data.azurerm_client_config.current.tenant_id
+      object_id               = access_policy.value.object_id
+      key_permissions         = var.kv_key_permissions_full
+      secret_permissions      = var.kv_secret_permissions_full
+      certificate_permissions = var.kv_certificate_permissions_full
+    }
   }
 }
 
