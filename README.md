@@ -2,18 +2,6 @@
 
 Infra and automation for BookAPI on Azure with Azure Key Vault integration and workload identity.
 
-## Overview
-- **Terraform**: Azure infrastructure provisioning
-- **Helm**: AKS deployment with workload identity
-- **Docker**: Build/push container images
-- **Azure CLI**: Authentication, AKS credentials
-- **kubectl**: Kubernetes operations
-- **GitHub Actions**: Full CI/CD pipeline
-- **Azure Key Vault**: Secure secret management for database connections
-- **Workload Identity**: Secure pod-to-Azure authentication
-
----
-
 ## Terraform
 To deploy infrastructure:
 ```powershell
