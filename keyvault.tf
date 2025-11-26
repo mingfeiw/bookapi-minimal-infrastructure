@@ -26,7 +26,7 @@ resource "azurerm_key_vault" "bookapi_kv" {
       },
       {
         comment   = "tti_mingfei_poc service principal"
-        object_id = data.azuread_service_principal.tti_mingfei_poc.id
+        object_id = data.azuread_service_principal.tti_mingfei_poc.object_id
       },
       {
         comment   = "mingfei.wang@kpmg.co.uk user"
