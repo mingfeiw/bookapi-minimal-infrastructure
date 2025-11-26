@@ -14,6 +14,7 @@ spec:
       labels:
         app: {{ include "bookapi-chart.name" . }}
     spec:
+      serviceAccountName: {{ include "bookapi-chart.serviceAccountName" . }}
       containers:
         - name: {{ include "bookapi-chart.name" . }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

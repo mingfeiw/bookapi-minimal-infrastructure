@@ -22,6 +22,20 @@ resource "azurerm_key_vault_secret" "sql_admin_password" {
   }
 }
 
+# Store the full database connection string in Key Vault
+resource "azurerm_key_vault_secret" "db_connection_string" {
+  name         = "DbConnectionString"
+  value        = "Server=${azurerm_mssql_server.main.fully_qualified_domain_name};Database=${azurerm_mssql_database.main.name};User ID=${azurerm_mssql_server.main.administrator_login};Password=${random_password.sql_admin_password.result};Encrypt=True;TrustServerCertificate=False;"
+  key_vault_id = azurerm_key_vault.bookapi_kv.id
+
+  depends_on = [azurerm_key_vault.bookapi_kv, azurerm_mssql_server.main, azurerm_mssql_database.main]
+
+  tags = {
+    Environment = "dev"
+    Project     = "bookapi"
+  }
+}
+
 resource "random_integer" "suffix" {
   min = 10000
   max = 99999

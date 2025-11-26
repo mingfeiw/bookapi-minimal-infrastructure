@@ -93,7 +93,9 @@ jobs:
         run: az aks get-credentials --resource-group ${{ env.RG_NAME }} --name ${{ env.AKS_NAME }}
 
       - name: Deploy to AKS
-        run: helm upgrade --install bookapi infra/bookapi-chart --namespace bookapi --create-namespace
+        run: |
+          CLIENT_ID=$(terraform output -raw workload_identity_client_id)
+          helm upgrade --install bookapi infra/bookapi-chart --namespace bookapi --create-namespace --set workloadIdentity.clientId=$CLIENT_ID
 
       - name: Describe first pod for troubleshooting
         run: |

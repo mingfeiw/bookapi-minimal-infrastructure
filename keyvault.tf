@@ -23,14 +23,18 @@ resource "azurerm_key_vault" "bookapi_kv" {
       {
         comment   = "current terraform user"
         object_id = data.azurerm_client_config.current.object_id
+      },
+      {
+        comment   = "bookapi workload identity"
+        object_id = azurerm_user_assigned_identity.bookapi_workload_identity.principal_id
       }
     ]
     content {
       tenant_id               = data.azurerm_client_config.current.tenant_id
       object_id               = access_policy.value.object_id
-      key_permissions         = var.kv_key_permissions_full
-      secret_permissions      = var.kv_secret_permissions_full
-      certificate_permissions = var.kv_certificate_permissions_full
+      key_permissions         = access_policy.value.comment == "bookapi workload identity" ? ["Get"] : var.kv_key_permissions_full
+      secret_permissions      = access_policy.value.comment == "bookapi workload identity" ? ["Get"] : var.kv_secret_permissions_full
+      certificate_permissions = access_policy.value.comment == "bookapi workload identity" ? [] : var.kv_certificate_permissions_full
     }
   }
 }

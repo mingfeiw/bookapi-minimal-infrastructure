@@ -1,5 +1,14 @@
 replicaCount: 1
 
+# Workload Identity configuration
+workloadIdentity:
+  clientId: "" # Will be set during deployment
+
+# Service Account configuration
+serviceAccount:
+  create: true
+  name: "bookapi-service-account"
+
 image:
   repository: acrbookapi.azurecr.io/bookapi-minimal
   pullPolicy: IfNotPresent
@@ -21,10 +30,10 @@ ingress:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
   hosts:
-    - host: bookapi.internal.local
-      paths:
-        - path: /
-          pathType: Prefix
+  - host: bookapi.internal.local
+    paths:
+    - path: /
+      pathType: Prefix
   tls: []
 
 resources:

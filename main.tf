@@ -24,6 +24,20 @@ resource "azurerm_kubernetes_cluster" "aks" {
   identity {
     type = "SystemAssigned"
   }
+
+  oidc_issuer_enabled       = true
+  workload_identity_enabled = true
+}
+
+resource "azurerm_user_assigned_identity" "bookapi_workload_identity" {
+  name                = "bookapi-workload-identity"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+
+  tags = {
+    Environment = "dev"
+    Project     = "bookapi"
+  }
 }
 
 resource "azurerm_container_registry" "acr" {

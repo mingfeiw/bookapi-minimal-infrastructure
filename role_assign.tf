@@ -30,5 +30,17 @@ resource "azurerm_role_assignment" "gh_oidc_app_acr_push" {
 #   depends_on = [azurerm_kubernetes_cluster.aks]
 # }
 
+# Create federated identity credential for workload identity
+resource "azurerm_federated_identity_credential" "bookapi_workload_identity" {
+  name                = "bookapi-federated-identity"
+  resource_group_name = azurerm_resource_group.rg.name
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = azurerm_kubernetes_cluster.aks.oidc_issuer_url
+  parent_id           = azurerm_user_assigned_identity.bookapi_workload_identity.id
+  subject             = "system:serviceaccount:bookapi:bookapi-service-account"
+
+  depends_on = [azurerm_kubernetes_cluster.aks]
+}
+
 data "azurerm_subscription" "primary" {
 }
