@@ -54,30 +54,19 @@ jobs:
         working-directory: infra
         run: terraform init
       
-      - name: Import existing resources
-        working-directory: infra
-        run: |
-          # Get subscription ID from Azure CLI
-          SUBSCRIPTION_ID=$(az account show --query id --output tsv)
-          
-          # Import AKS cluster if it exists
-          terraform import azurerm_kubernetes_cluster.aks /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.ContainerService/managedClusters/aks-bookapi-minimal || true
-          
-          # Import Application Gateway if it exists
-          terraform import azurerm_application_gateway.appgw /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/applicationGateways/appgw-bookapi || true
-          
-          # Import ACR if it exists (needed for role assignment scope)
-          terraform import azurerm_container_registry.acr /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.ContainerRegistry/registries/acrbookapi || true
-          
-          # Try to import role assignments - find the specific one for the OIDC service principal
-          ROLE_ASSIGNMENT_ID=$(az role assignment list --assignee 6d9b61c7-8c93-4d79-b1f4-9a9f533baff1 --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.ContainerRegistry/registries/acrbookapi --role "AcrPush" --query '[0].id' -o tsv 2>/dev/null)
-          if [ ! -z "$ROLE_ASSIGNMENT_ID" ]; then
-            terraform import azurerm_role_assignment.gh_oidc_app_acr_push "$ROLE_ASSIGNMENT_ID" || true
-          fi
-
+     
       - name: Terraform Apply
         working-directory: infra
-        run: terraform apply -auto-approve
+        run: |
+          # Try to import existing Key Vault first
+          terraform import azurerm_key_vault.bookapi_kv "/subscriptions/${{ secrets.AZURE_SUBSCRIPTION_ID }}/resourceGroups/rg-bookapi-minimal/providers/Microsoft.KeyVault/vaults/kv-bookapi" || true
+          
+          # Apply with retry for role assignment conflicts
+          if ! terraform apply -auto-approve; then
+            terraform state rm azurerm_role_assignment.aks_acr_pull || true
+            terraform state rm azurerm_role_assignment.aks_network_contributor || true
+            terraform apply -auto-approve
+          fi
 
       - name: ACR login
         run: az acr login --name ${{ env.ACR_NAME }}
