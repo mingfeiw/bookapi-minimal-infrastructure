@@ -21,12 +21,8 @@ resource "azurerm_key_vault" "bookapi_kv" {
         object_id = data.azuread_service_principal.tti_mingfei_poc.object_id
       },
       {
-        comment   = "current terraform user"
+        comment   = "current terraform user (mingfei.wang@kpmg.co.uk)"
         object_id = data.azurerm_client_config.current.object_id
-      },
-      {
-        comment   = "mingfei.wang@kpmg.co.uk user"
-        object_id = data.azuread_user.mingfei_wang.object_id
       },
       {
         comment   = "bookapi workload identity"
