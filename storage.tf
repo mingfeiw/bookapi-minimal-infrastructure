@@ -19,11 +19,6 @@ resource "azurerm_storage_account" "bookapi_sa" {
     # Enable change feed (recommended for monitoring)
     change_feed_enabled = true
   }
-
-  # Enable soft delete for containers
-  container_delete_retention_policy {
-    days = 30
-  }
 }
 
 resource "azurerm_storage_container" "tfstate" {
