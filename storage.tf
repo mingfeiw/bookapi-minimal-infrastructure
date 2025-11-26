@@ -7,35 +7,22 @@ resource "azurerm_storage_account" "bookapi_sa" {
   min_tls_version               = "TLS1_2"
   public_network_access_enabled = true
 
-  network_rules {
-    default_action = "Deny"
-    bypass         = ["AzureServices"]
+  blob_properties {
+    # Enable soft delete for blobs
+    delete_retention_policy {
+      days = 30
+    }
 
-    # Allow access from VNet subnets
-    virtual_network_subnet_ids = [
-      azurerm_subnet.aks_subnet.id,
-      azurerm_subnet.appgw_subnet.id
-    ]
+    # Enable versioning (recommended with soft delete)
+    versioning_enabled = true
 
-    # Allow access from your public IP and GitHub Actions
-    ip_rules = [
-      "87.113.24.110", # Your current public IP
-      "4.175.0.0/16",  # GitHub Actions IP range
-      "13.64.0.0/16",  # GitHub Actions IP range
-      "20.0.0.0/8",    # GitHub Actions IP range
-      "40.0.0.0/8",    # GitHub Actions IP range
-      "52.0.0.0/8",    # GitHub Actions IP range
-      "104.0.0.0/8"    # GitHub Actions IP range
-    ]
+    # Enable change feed (recommended for monitoring)
+    change_feed_enabled = true
   }
 
-  blob_properties {
-    delete_retention_policy {
-      days = 14
-    }
-    container_delete_retention_policy {
-      days = 14
-    }
+  # Enable soft delete for containers
+  container_delete_retention_policy {
+    days = 30
   }
 }
 

@@ -1,6 +1,6 @@
 data "azurerm_key_vault" "kv" {
   name                = "kv-bookapi"
-  resource_group_name = "rg-bookapi-minimal"
+  resource_group_name = azurerm_resource_group.rg.name
 }
 
 # Generate a secure random password for SQL admin
@@ -32,8 +32,8 @@ resource "random_integer" "suffix" {
 
 resource "azurerm_mssql_server" "main" {
   name                         = "bookapisqlserver${random_integer.suffix.result}"
-  resource_group_name          = "rg-bookapi-minimal"
-  location                     = "uksouth"
+  resource_group_name          = azurerm_resource_group.rg.name
+  location                     = azurerm_resource_group.rg.location
   version                      = "12.0"
   administrator_login          = "sqladminuser"
   administrator_login_password = random_password.sql_admin_password.result
@@ -46,6 +46,22 @@ resource "azurerm_mssql_server" "main" {
     Environment = "dev"
     Project     = "bookapi"
   }
+}
+
+# Enable auditing on SQL Server
+resource "azurerm_mssql_server_extended_auditing_policy" "main" {
+  server_id                               = azurerm_mssql_server.main.id
+  storage_endpoint                        = azurerm_storage_account.bookapi_sa.primary_blob_endpoint
+  storage_account_access_key              = azurerm_storage_account.bookapi_sa.primary_access_key
+  storage_account_access_key_is_secondary = false
+  retention_in_days                       = 90
+
+  # Audit specific events
+  log_monitoring_enabled = true
+
+  depends_on = [
+    azurerm_storage_account.bookapi_sa
+  ]
 }
 
 resource "azurerm_mssql_database" "main" {
