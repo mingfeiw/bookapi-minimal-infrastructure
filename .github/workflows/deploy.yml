@@ -53,29 +53,28 @@ jobs:
       - name: Terraform Init
         working-directory: infra
         run: terraform init
-    
+      
       - name: Import existing resources
         working-directory: infra
-        continue-on-error: true
         run: |
-          SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+          # Get subscription ID from Azure CLI
+          SUBSCRIPTION_ID=$(az account show --query id --output tsv)
           
-          # Import all existing resources
-          terraform import azurerm_resource_group.rg /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal || true
-          terraform import azurerm_storage_account.bookapi_sa /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Storage/storageAccounts/stbookapiminimal || true
-          terraform import azurerm_storage_container.tfstate https://stbookapiminimal.blob.core.windows.net/bookapi-container || true
-          terraform import azurerm_log_analytics_workspace.bookapi_workspace /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.OperationalInsights/workspaces/bookapi-law || true
-          terraform import azurerm_application_insights.bookapi_appinsights /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Insights/components/bookapi-appinsights || true
-          terraform import azurerm_private_dns_zone.internal /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/privateDnsZones/internal.local || true
-          terraform import azurerm_private_dns_zone_virtual_network_link.vnet_link /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/privateDnsZones/internal.local/virtualNetworkLinks/vnet-dns-link || true
+          # Import AKS cluster if it exists
+          terraform import azurerm_kubernetes_cluster.aks /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.ContainerService/managedClusters/aks-bookapi-minimal || true
+          
+          # Import Application Gateway if it exists
+          terraform import azurerm_application_gateway.appgw /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/applicationGateways/appgw-bookapi || true
+          
+          # Import ACR if it exists (needed for role assignment scope)
           terraform import azurerm_container_registry.acr /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.ContainerRegistry/registries/acrbookapi || true
-          terraform import azurerm_network_security_group.nsg /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/networkSecurityGroups/bookapi-nsg || true
-          terraform import azurerm_network_security_rule.allow_http /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/networkSecurityGroups/bookapi-nsg/securityRules/Allow-HTTP-80 || true
-          terraform import azurerm_virtual_network.vnet /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/virtualNetworks/vnet-bookapi || true
-          terraform import azurerm_subnet.aks_subnet /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/aks-subnet || true
-          terraform import azurerm_subnet.appgw_subnet /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/virtualNetworks/vnet-bookapi/subnets/appgw-subnet || true
-          terraform import azurerm_public_ip.appgw_pip /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Network/publicIPAddresses/pip-appgw-bookapi || true
           
+          # Try to import role assignments - find the specific one for the OIDC service principal
+          ROLE_ASSIGNMENT_ID=$(az role assignment list --assignee 6d9b61c7-8c93-4d79-b1f4-9a9f533baff1 --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-bookapi-minimal/providers/Microsoft.ContainerRegistry/registries/acrbookapi --role "AcrPush" --query '[0].id' -o tsv 2>/dev/null)
+          if [ ! -z "$ROLE_ASSIGNMENT_ID" ]; then
+            terraform import azurerm_role_assignment.gh_oidc_app_acr_push "$ROLE_ASSIGNMENT_ID" || true
+          fi
+
       - name: Terraform Apply
         working-directory: infra
         run: terraform apply -auto-approve
