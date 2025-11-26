@@ -54,11 +54,12 @@ jobs:
         working-directory: infra
         run: terraform init
     
-      - name: Import existing Resource Group
+      - name: Import existing resources
         working-directory: infra
         continue-on-error: true
         run: |
           terraform import azurerm_resource_group.rg rg-bookapi-minimal || true
+          terraform import azurerm_storage_account.bookapi_sa /subscriptions/$(az account show --query id -o tsv)/resourceGroups/rg-bookapi-minimal/providers/Microsoft.Storage/storageAccounts/stbookapiminimal || true
     
       - name: Terraform Apply
         working-directory: infra
