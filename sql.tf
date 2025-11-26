@@ -1,8 +1,3 @@
-data "azurerm_key_vault" "kv" {
-  name                = "kv-bookapi"
-  resource_group_name = azurerm_resource_group.rg.name
-}
-
 # Generate a secure random password for SQL admin
 resource "random_password" "sql_admin_password" {
   length      = 16
@@ -17,7 +12,7 @@ resource "random_password" "sql_admin_password" {
 resource "azurerm_key_vault_secret" "sql_admin_password" {
   name         = "sql-admin-password"
   value        = random_password.sql_admin_password.result
-  key_vault_id = data.azurerm_key_vault.kv.id
+  key_vault_id = azurerm_key_vault.bookapi_kv.id
 
   tags = {
     Environment = "dev"
