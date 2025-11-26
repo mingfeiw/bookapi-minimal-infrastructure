@@ -5,3 +5,6 @@ data "azuread_application" "tti_mingfei_poc" {
 data "azuread_service_principal" "tti_mingfei_poc" {
   client_id = data.azuread_application.tti_mingfei_poc.client_id
 }
+
+# Current Azure client configuration
+data "azurerm_client_config" "current" {}
