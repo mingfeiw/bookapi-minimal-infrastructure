@@ -54,6 +54,12 @@ jobs:
         working-directory: infra
         run: terraform init
     
+      - name: Import existing Resource Group
+        working-directory: infra
+        continue-on-error: true
+        run: |
+          terraform import azurerm_resource_group.rg rg-bookapi-minimal || true
+    
       - name: Terraform Apply
         working-directory: infra
         run: terraform apply -auto-approve
