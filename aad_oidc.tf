@@ -8,3 +8,8 @@ data "azuread_service_principal" "tti_mingfei_poc" {
 
 # Current Azure client configuration
 data "azurerm_client_config" "current" {}
+
+# Look up user by email for Key Vault access
+data "azuread_user" "mingfei_wang" {
+  user_principal_name = "mingfei.wang@kpmg.co.uk"
+}
