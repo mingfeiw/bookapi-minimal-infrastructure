@@ -94,8 +94,9 @@ jobs:
 
       - name: Deploy to AKS
         run: |
+          cd infra
           CLIENT_ID=$(terraform output -raw workload_identity_client_id)
-          helm upgrade --install bookapi infra/bookapi-chart --namespace bookapi --create-namespace --set workloadIdentity.clientId=$CLIENT_ID
+          helm upgrade --install bookapi ./bookapi-chart --namespace bookapi --create-namespace --set workloadIdentity.clientId=$CLIENT_ID
 
       - name: Describe first pod for troubleshooting
         run: |
