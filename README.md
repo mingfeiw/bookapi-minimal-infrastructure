@@ -1,111 +1,103 @@
 # BookAPI Minimal Infrastructure
 
-Infra and automation for BookAPI on Azure with Azure Key Vault integration and workload identity.
+Complete Azure infrastructure and CI/CD automation for BookAPI using Terraform, AKS, and workload identity for secure Key Vault integration.
 
-## Terraform
-To deploy infrastructure:
+## Quick Start
+
+### Prerequisites
+- Azure CLI authenticated
+- Terraform installed
+- kubectl and helm installed
+- Configure `terraform.tfvars` with your values
+
+### Bootstrap (First Time Only)
+```powershell
+# Create backend storage for Terraform state
+cd bootstrap
+terraform init
+terraform apply -auto-approve
+cd ..
+```
+
+### Deploy Infrastructure
 ```powershell
 terraform init
 terraform plan
 terraform apply
 ```
 
----
-
-## Helm
-`bookapi-chart` contains:
-- `Chart.yaml`: Chart metadata
-- `values.yaml`: Configuration (image, resources, workload identity)
-- `templates/deployment.yaml`: Deployment with service account
-- `templates/service.yaml`: LoadBalancer service
-- `templates/ingress.yaml`: NGINX ingress
-- `templates/serviceaccount.yaml`: Workload identity service account
-- `templates/_helpers.tpl`: Template helpers
-
-To deploy with Helm:
+### Deploy Application
 ```powershell
-# Get workload identity client ID
+# Get workload identity client ID and deploy
 CLIENT_ID=$(terraform output -raw workload_identity_client_id)
-
-# Deploy with workload identity
 helm upgrade --install bookapi bookapi-chart --namespace bookapi --create-namespace --set workloadIdentity.clientId=$CLIENT_ID
 ```
 
 ---
 
-## Workflow
-1. **Infrastructure**: Terraform provisions Azure resources including Key Vault with workload identity
-2. **Secrets**: Database connection string automatically stored in Key Vault
-3. **Build**: Docker image built and pushed to Azure Container Registry (ACR)
-4. **Authentication**: Azure CLI authenticates and fetches AKS credentials
-5. **Deploy**: Helm deploys BookAPI to AKS with workload identity configuration
-6. **Runtime**: Application securely accesses Key Vault using workload identity
-7. **Monitoring**: kubectl for troubleshooting and pod inspection
-8. **Automation**: Complete CI/CD pipeline via GitHub Actions with OIDC authentication
+## Architecture Overview
+
+### Infrastructure Components
+- **AKS Cluster**: Single-node cluster with workload identity enabled
+- **Application Gateway**: Public-facing load balancer with TLS termination
+- **Azure Container Registry**: Private Docker image repository
+- **Virtual Network**: Segmented subnets for gateway, AKS, and SQL
+- **Key Vault**: Secure secrets storage with workload identity access
+- **SQL Database**: Managed database with connection string in Key Vault
+- **Log Analytics**: Centralized logging and monitoring
+
+### Network Flow
+1. **Internet → Application Gateway** (Public IP, port 80/443)
+2. **Application Gateway → AKS** (Internal load balancer)
+3. **AKS Ingress → BookAPI Pods** (NGINX ingress controller)
+4. **Pods → Key Vault** (Workload identity for secrets)
+5. **Pods → SQL Database** (Private connection)
 
 ---
 
-## Security and Traffic Flow
-1. Request hits Application Gateway (`appgw-subnet`, public IP, see `gateway.tf`).
-2. NSG (`nsg.tf`) allows inbound traffic on port 80 to the gateway.
-3. Application Gateway (with TLS/WAF, Key Vault certs) forwards traffic to AKS (`aks-subnet`).
-4. NSG allows traffic to AKS on port 80.
-5. Ingress (`bookapi-chart/templates/ingress.yaml`, `values.yaml`) in AKS routes request to BookAPI pods.
-6. Internal traffic uses private IPs (`vnet.tf` for address space and subnet definitions); DNS (`dns.tf`) resolves services; RBAC (`role_assign.tf`) controls access.
+## CI/CD Pipeline
+
+### GitHub Actions Workflow (`.github/workflows/deploy.yml`)
+The workflow is triggered on pushes to `main` and performs:
+
+1. **Checkout**: Both infrastructure and source repositories
+2. **Lint**: Dockerfile validation with hadolint
+3. **Azure Login**: OIDC authentication (no secrets stored)
+4. **Bootstrap**: Create Terraform backend (if needed)
+5. **Infrastructure**: Terraform plan and apply
+6. **Build**: Docker image from source repository
+7. **Push**: Image to Azure Container Registry
+8. **Deploy**: Helm chart with workload identity configuration
+9. **Validate**: Pod description for troubleshooting
+
+### Required GitHub Secrets
+- `AZURE_CLIENT_ID`: Service principal client ID
+- `AZURE_TENANT_ID`: Azure AD tenant ID
+- `AZURE_SUBSCRIPTION_ID`: Target subscription ID
 
 ---
 
-## Identity & Access
-- **GitHub Actions OIDC**: Federated credentials for CI/CD (`aad_oidc.tf`, `role_assign.tf`)
-- **Service Principal**: Azure AD app registration (`aad_oidc.tf`)
-- **AKS Workload Identity**: Pod-to-Azure authentication (`main.tf`, `role_assign.tf`)
-  - User-assigned managed identity: `bookapi-workload-identity`
-  - Federated identity credential for Kubernetes service account
-  - Service account: `bookapi-service-account` with workload identity annotation
+## Cost Optimization Features
+- **Single AKS Node**: Minimal compute resources for development
+- **Basic SKUs**: Container Registry, Key Vault use basic tiers
+- **30-day Log Retention**: Reduced Log Analytics costs
+- **Standard_v2 Gateway**: Right-sized for expected traffic
+- **GRS Storage**: Balance between cost and redundancy
 
 ---
 
-## Observability
-- Logs/metrics: Log Analytics & App Insights (`data.tf`)
-- Key Vault diagnostics (`keyvault.tf`)
-
----
-
-## Azure Key Vault Integration
-The application securely accesses database credentials from Azure Key Vault using workload identity:
-
-### Key Vault Setup (`keyvault.tf`, `sql.tf`):
-- **Key Vault**: `kv-bookapi` with network access enabled
-- **Secrets Stored**:
-  - `sql-admin-password`: Auto-generated SQL admin password
-  - `DbConnectionString`: Complete database connection string
-- **Access Policies**: 
-  - GitHub Actions service principal (full access)
-  - Current user (full access)
-  - Workload identity (Get secrets only)
-
-### How It Works:
-1. Pod runs with `bookapi-service-account` service account
-2. Service account has workload identity annotation with client ID
-3. Workload identity links to Azure managed identity
-4. `DefaultAzureCredential()` automatically uses workload identity to authenticate
-5. Application successfully retrieves secrets from Key Vault
-
----
-
-## Cost Optimization
-- **Log Analytics**: `PerGB2018` SKU, 30-day retention (`data.tf`)
-- **Storage**: GRS replication (`storage.tf`)
-- **AKS**: Single replica by default (`bookapi-chart/values.yaml`)
-- **Application Gateway**: `Standard_v2` SKU (`gateway.tf`)
-- **Key Vault**: `standard` SKU with minimal access policies (`keyvault.tf`)
-- **Workload Identity**: No additional cost - uses Azure AD managed identities
-- **Container Registry**: Basic SKU (`main.tf`)
-- Basic/standard SKUs used where possible to minimize costs
-
-## Outputs
-Key Terraform outputs for integration:
-- `workload_identity_client_id`: Client ID for Helm deployment
-- `app_gateway_public_ip`: Public endpoint for application access
-- `tenant_id` & `subscription_id`: Azure environment details
-
+## File Structure
+```
+.
+├── *.tf                    # Terraform infrastructure modules
+├── terraform.tfvars       # Configuration variables
+├── backend.tf             # Remote state configuration  
+├── bootstrap/             # Backend storage bootstrap
+│   └── bootstrap.tf
+├── bookapi-chart/         # Helm chart for application
+│   ├── Chart.yaml
+│   ├── values.yaml
+│   └── templates/
+└── .github/workflows/     # CI/CD automation
+    └── deploy.yml
+```
