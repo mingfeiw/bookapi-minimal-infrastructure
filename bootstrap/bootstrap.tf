@@ -37,6 +37,6 @@ resource "azurerm_storage_account" "backend_sa" {
 
 resource "azurerm_storage_container" "backend_container" {
   name                  = "bookapi-container"
-  storage_account_id    = azurerm_storage_account.backend_sa.id
+  storage_account_name  = azurerm_storage_account.backend_sa.name
   container_access_type = "private"
 }

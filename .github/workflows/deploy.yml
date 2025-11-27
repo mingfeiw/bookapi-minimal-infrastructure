@@ -68,7 +68,7 @@ jobs:
       - name: Terraform Apply
         working-directory: infra
         run: terraform apply tfplan
-
+        
       - name: ACR login
         run: az acr login --name ${{ env.ACR_NAME }}
 

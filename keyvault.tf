@@ -13,29 +13,31 @@ resource "azurerm_key_vault" "bookapi_kv" {
     bypass         = "AzureServices"
   }
 
-  # Access policies with full permissions for tti_mingfei_poc service principal and current user
-  dynamic "access_policy" {
-    for_each = [
-      {
-        comment   = "tti_mingfei_poc service principal"
-        object_id = data.azuread_service_principal.tti_mingfei_poc.object_id
-      },
-      {
-        comment   = "current terraform user (mingfei.wang@kpmg.co.uk)"
-        object_id = data.azurerm_client_config.current.object_id
-      },
-      {
-        comment   = "bookapi workload identity"
-        object_id = azurerm_user_assigned_identity.bookapi_workload_identity.principal_id
-      }
-    ]
-    content {
-      tenant_id               = data.azurerm_client_config.current.tenant_id
-      object_id               = access_policy.value.object_id
-      key_permissions         = access_policy.value.comment == "bookapi workload identity" ? ["Get"] : var.kv_key_permissions_full
-      secret_permissions      = access_policy.value.comment == "bookapi workload identity" ? ["Get"] : var.kv_secret_permissions_full
-      certificate_permissions = access_policy.value.comment == "bookapi workload identity" ? [] : var.kv_certificate_permissions_full
-    }
+  # Access policy for tti_mingfei_poc service principal
+  access_policy {
+    tenant_id               = data.azurerm_client_config.current.tenant_id
+    object_id               = data.azuread_service_principal.tti_mingfei_poc.object_id
+    key_permissions         = var.kv_key_permissions_full
+    secret_permissions      = var.kv_secret_permissions_full
+    certificate_permissions = var.kv_certificate_permissions_full
+  }
+
+  # Access policy for current authenticated user - Key, Secret & Certificate Management
+  access_policy {
+    tenant_id               = data.azurerm_client_config.current.tenant_id
+    object_id               = data.azurerm_client_config.current.object_id
+    key_permissions         = var.kv_key_permissions_full
+    secret_permissions      = var.kv_secret_permissions_full
+    certificate_permissions = var.kv_certificate_permissions_full
+  }
+
+  # Access policy for bookapi workload identity - limited access
+  access_policy {
+    tenant_id               = data.azurerm_client_config.current.tenant_id
+    object_id               = azurerm_user_assigned_identity.bookapi_workload_identity.principal_id
+    key_permissions         = ["Get"]
+    secret_permissions      = ["Get"]
+    certificate_permissions = []
   }
 }
 
